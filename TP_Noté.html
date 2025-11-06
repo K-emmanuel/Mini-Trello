@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Trello - Gestion de Tâches</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="container" x-data="trelloApp()">
+        <h1>Gestion de Tâches</h1>
+
+        
+        <div class="controls">
+            <h2 x-text="editingTask ? 'Modifier une tâche' : 'Ajouter une tâche'"></h2>
+            <form @submit.prevent="editingTask ? updateTask() : addTask()">
+                <div class="form-group">
+                    <label for="titre">Titre</label>
+                    <input type="text" id="titre" x-model="newTask.titre" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" x-model="newTask.description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="statut">Statut</label>
+                    <select id="statut" x-model="newTask.statut">
+                        <option value="A faire">A faire</option>
+                        <option value="En cours">En cours</option>
+                        <option value="Terminé">Terminé</option>
+                    </select>
+                </div>
+                <button type="submit" x-text="editingTask ? 'Modifier' : 'Ajouter'"></button>
+                <button type="button" class="secondary" @click="cancelEdit()" x-show="editingTask">Annuler</button>
+            </form>
+        </div>
+
+        
+        <div class="filters">
+            <div class="filter-group">
+                <input type="text" x-model="searchTerm" placeholder="Rechercher une tâche...">
+                <select x-model="filterStatus">
+                    <option value="">Tous les statuts</option>
+                    <option value="A faire">A faire</option>
+                    <option value="En cours">En cours</option>
+                    <option value="Terminé">Terminé</option>
+                </select>
+            </div>
+        </div>
+
+        
+        <div class="stats">
+            <div class="stats-row">
+                <div class="stat-item">
+                    <strong x-text="tasks.length"></strong> tâche(s) au total
+                </div>
+                <div class="stat-item">
+                    <strong x-text="getTasksByStatus('A faire').length"></strong> à faire
+                </div>
+                <div class="stat-item">
+                    <strong x-text="getTasksByStatus('En cours').length"></strong> en cours
+                </div>
+                <div class="stat-item">
+                    <strong x-text="getTasksByStatus('Terminé').length"></strong> terminé(es)
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="board">
+            
+            <div class="column">
+                <h3>A faire</h3>
+                <div class="task-list">
+                    <template x-for="task in filteredTasksByColumn('A faire')" :key="task.id">
+                        <div class="task">
+                            <div class="task-header">
+                                <span class="task-title" x-text="task.titre"></span>
+                                <span class="task-status status-a-faire" x-text="task.statut"></span>
+                            </div>
+                            <p class="task-description" x-text="task.description"></p>
+                            <div class="task-actions">
+                                <button @click="changeStatus(task.id, 'En cours')">En cours</button>
+                                <button @click="editTask(task)">Modifier</button>
+                                <button class="delete" @click="deleteTask(task.id)">Supprimer</button>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="filteredTasksByColumn('A faire').length === 0" class="empty-state">
+                        Aucune tâche
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="column">
+                <h3>En cours</h3>
+                <div class="task-list">
+                    <template x-for="task in filteredTasksByColumn('En cours')" :key="task.id">
+                        <div class="task">
+                            <div class="task-header">
+                                <span class="task-title" x-text="task.titre"></span>
+                                <span class="task-status status-en-cours" x-text="task.statut"></span>
+                            </div>
+                            <p class="task-description" x-text="task.description"></p>
+                            <div class="task-actions">
+                                <button @click="changeStatus(task.id, 'Terminé')">Terminé</button>
+                                <button @click="changeStatus(task.id, 'A faire')">A faire</button>
+                                <button @click="editTask(task)">Modifier</button>
+                                <button class="delete" @click="deleteTask(task.id)">Supprimer</button>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="filteredTasksByColumn('En cours').length === 0" class="empty-state">
+                        Aucune tâche
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="column">
+                <h3>Terminé</h3>
+                <div class="task-list">
+                    <template x-for="task in filteredTasksByColumn('Terminé')" :key="task.id">
+                        <div class="task">
+                            <div class="task-header">
+                                <span class="task-title" x-text="task.titre"></span>
+                                <span class="task-status status-termine" x-text="task.statut"></span>
+                            </div>
+                            <p class="task-description" x-text="task.description"></p>
+                            <div class="task-actions">
+                                <button @click="changeStatus(task.id, 'En cours')">En cours</button>
+                                <button @click="editTask(task)">Modifier</button>
+                                <button class="delete" @click="deleteTask(task.id)">Supprimer</button>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="filteredTasksByColumn('Terminé').length === 0" class="empty-state">
+                        Aucune tâche
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
